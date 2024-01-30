@@ -194,10 +194,10 @@ export default function Home() {
             </div>
             <div className="relative max-w-sm">
               <input
-                type="text"
+                type="range"
                 id="caseValue"
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                placeholder="Ex.: precatório do inss"
+                placeholder="Ex.: R$ 1000,00"
                 {...register('caseValue')}
               />
             </div>
