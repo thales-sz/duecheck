@@ -3,7 +3,6 @@
 import { api } from '@/api/api'
 import { useQuery } from '@tanstack/react-query'
 import React from 'react'
-
 import Link from 'next/link'
 import LoadingSpinner from '@/components/LoadingSpinner'
 
@@ -82,7 +81,7 @@ function LawsuitDetails({ params }: { params: { id: string } }) {
 
 export default LawsuitDetails
 
-function IconBarchart(props) {
+function IconBarchart(props: any) {
   return (
     <svg
       {...props}
@@ -103,7 +102,7 @@ function IconBarchart(props) {
   )
 }
 
-function IconClipboard(props) {
+function IconClipboard(props: any) {
   return (
     <svg
       {...props}
@@ -123,7 +122,7 @@ function IconClipboard(props) {
   )
 }
 
-function IconGlobe(props) {
+function IconGlobe(props: any) {
   return (
     <svg
       {...props}
@@ -144,7 +143,7 @@ function IconGlobe(props) {
   )
 }
 
-function IconHome(props) {
+function IconHome(props: any) {
   return (
     <svg
       {...props}
