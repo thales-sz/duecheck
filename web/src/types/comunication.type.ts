@@ -1,7 +1,7 @@
 export type Communication = {
   id: number
   communicationDate: Date
-  divulgationDate: Date
+  divulgationDate: string
   court: any
   communicationType: string
   keyword: string
