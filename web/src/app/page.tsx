@@ -12,7 +12,8 @@ type Inputs = {
   documentType: string
   initialDate: string
   finalDate: string
-  caseValue?: string
+  caseValueMin: string
+  caseValueMax: string
   court: string
   journal: string
 }
@@ -23,7 +24,7 @@ export default function Home() {
   const { mutate, data, isPending } = useMutation({
     mutationFn: async (data: Inputs) => {
       return api.get<{ currentPage: number; items: Communication[] }>(
-        `/communication?keyword=${data.keyword}&initialDate=${data.initialDate}&finalDate=${data.finalDate}&value=${data.caseValue}&court=${data.court}&itemsPerPage=50&currentPage=1&journal=${data.journal}`,
+        `/communication?keyword=${data.keyword}&initialDate=${data.initialDate}&finalDate=${data.finalDate}&caseValueMin=${data.caseValueMin}&caseValueMin=${data.caseValueMax}&court=${data.court}&itemsPerPage=50&currentPage=1&journal=${data.journal}`,
       )
     },
   })
@@ -141,64 +142,25 @@ export default function Home() {
               })}
             </select>
           </div>
-          {watch('court') === 'TJSP' && (
+          <div className="text-center max-w-[300px]">
             <div>
-              <div className="mb-2 block">
-                Caderno:
-                <label htmlFor="journal" />
-              </div>
-              <select
-                id="journal"
-                {...register('journal', { required: true })}
-                defaultValue="Caderno"
-                className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 w-40"
-              >
-                <option hidden value="Caderno" className="text-sm">
-                  Caderno
-                </option>
-                <option value="10" className="text-xs">
-                  Caderno 1 - Administrativo
-                </option>
-                <option value="11" className="text-xs">
-                  Caderno 2 - Judicial - 2ª Instância - Entrada e Distribuição -
-                  Parte I
-                </option>
-                <option value="12" className="text-xs">
-                  Caderno 3 - Judicial - 1ª Instância - Capital - Parte I
-                </option>
-                <option value="20" className="text-xs">
-                  Caderno 3 - Judicial - 1ª Instância - Capital - Parte II
-                </option>
-                <option value="18" className="text-xs">
-                  Caderno 4 - Judicial - 1ª Instância - Interior - Parte I
-                </option>
-                <option value="13" className="text-xs">
-                  Caderno 4 - Judicial - 1ª Instância - Interior - Parte II
-                </option>
-                <option value="15" className="text-xs">
-                  Caderno 4 - Judicial - 1ª Instância - Interior - Parte III
-                </option>
-                <option value="14" className="text-xs">
-                  Caderno 5 - Editais e Leilões
-                </option>
-                <option value="0" className="text-xs">
-                  Todos
-                </option>
-              </select>
-            </div>
-          )}
-          <div>
-            <div className="mb-2 block">
               Valor da causa:
               <label htmlFor="caseValue" />
             </div>
-            <div className="relative max-w-sm">
+            <div className="flex justify-between p-3">
               <input
-                type="range"
-                id="caseValue"
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                placeholder="Ex.: R$ 1000,00"
-                {...register('caseValue')}
+                type="number"
+                id="caseValueMin"
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-1/2 p-2.5"
+                placeholder="R$ 100,00"
+                {...register('caseValueMin')}
+              />
+              <input
+                type="number"
+                id="caseValueMax"
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-1/2 p-2.5"
+                placeholder="R$ 5000,00"
+                {...register('caseValueMax')}
               />
             </div>
           </div>
