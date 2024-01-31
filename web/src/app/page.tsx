@@ -25,7 +25,7 @@ export default function Home() {
   const { mutate, data, isPending } = useMutation({
     mutationFn: async (data: Inputs) => {
       return api.get<{ currentPage: number; items: Communication[] }>(
-        `/communication?term=${data.term}&initialDate=${data.initialDate}&finalDate=${data.finalDate}&minValue=${data.caseValueMin}&maxValue=${data.caseValueMax}&court=${data.court}&itemsPerPage=50&currentPage=1&journal=${data.journal}`,
+        `/communication?term=${data.term}&initialDate=${data.initialDate}&finalDate=${data.finalDate}&minValue=${data.caseValueMin}&maxValue=${data.caseValueMax}&court=${data.court}&itemsPerPage=300&currentPage=1&journal=${data.journal}`,
       )
     },
   })
@@ -169,51 +169,47 @@ export default function Home() {
       </header>
       <section className="pt-5 text-center">
         <table className="w-4/5 mx-auto bg-white">
+          <TableHeadComm />
           {isPending && <LoadingSpinner />}
-          {query.data?.data ? (
-            <>
-              <TableHeadComm />
-              <tbody className="w-4/5 mx-auto overflow-y-auto">
-                {data?.data.items.map((communication) => {
-                  return (
-                    <tr key={communication.id}>
-                      <td className="border h-20">
-                        <button
-                          onClick={() =>
-                            push(`/lawsuit/${communication.lawsuitNumber}`)
-                          }
-                        >
-                          {communication.formatedLawsuitNumber}
-                        </button>
-                      </td>
-                      <td className="border max-h-20 overflow-y-auto">
-                        {communication.court.acronym}
-                      </td>
-                      <td className="border max-h-20 max-w-10 overflow-y-auto">
-                        <a href={communication.link} target="_blank">
-                          link
-                        </a>
-                      </td>
-                      <td className="border max-h-20 overflow-x-auto">
-                        {communication.resume}
-                      </td>
-                      <td className="border max-h-20 overflow-y-auto">
-                        {communication.documentType}
-                      </td>
-                      <td className="border max-h-20 overflow-y-auto">
-                        {communication.divulgationDate}
-                      </td>
-                      <td className="border max-h-20 overflow-y-auto">
-                        {communication.lawsuit.lawsuitValue
-                          ? `R$ ${communication.lawsuit.lawsuitValue}`
-                          : '-'}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </>
-          ) : null}
+          <tbody className="w-4/5 mx-auto overflow-y-auto">
+            {data?.data.items.map((communication) => {
+              return (
+                <tr key={communication.id}>
+                  <td className="border h-20">
+                    <button
+                      onClick={() =>
+                        push(`/lawsuit/${communication.lawsuitNumber}`)
+                      }
+                    >
+                      {communication.formatedLawsuitNumber}
+                    </button>
+                  </td>
+                  <td className="border max-h-20 overflow-y-auto">
+                    {communication.court.acronym}
+                  </td>
+                  <td className="border max-h-20 max-w-10 overflow-y-auto">
+                    <a href={communication.link} target="_blank">
+                      link
+                    </a>
+                  </td>
+                  <td className="border max-h-20 overflow-x-auto">
+                    {communication.resume}
+                  </td>
+                  <td className="border max-h-20 overflow-y-auto">
+                    {communication.documentType}
+                  </td>
+                  <td className="border max-h-20 overflow-y-auto">
+                    {communication.divulgationDate}
+                  </td>
+                  <td className="border max-h-20 overflow-y-auto">
+                    {communication.lawsuit.lawsuitValue
+                      ? `R$ ${communication.lawsuit.lawsuitValue}`
+                      : '-'}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
         </table>
       </section>
     </main>
