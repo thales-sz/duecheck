@@ -6,9 +6,10 @@ import { Communication } from '../types/comunication.type'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { SubmitHandler, useForm } from 'react-hook-form'
+import TableHeadComm from '@/components/TableHeadComm'
 
 type Inputs = {
-  keyword: string
+  term: string
   documentType: string
   initialDate: string
   finalDate: string
@@ -19,12 +20,12 @@ type Inputs = {
 }
 
 export default function Home() {
-  const { register, handleSubmit, watch } = useForm<Inputs>()
+  const { register, handleSubmit } = useForm<Inputs>()
   const { push } = useRouter()
   const { mutate, data, isPending } = useMutation({
     mutationFn: async (data: Inputs) => {
       return api.get<{ currentPage: number; items: Communication[] }>(
-        `/communication?keyword=${data.keyword}&initialDate=${data.initialDate}&finalDate=${data.finalDate}&caseValueMin=${data.caseValueMin}&caseValueMin=${data.caseValueMax}&court=${data.court}&itemsPerPage=50&currentPage=1&journal=${data.journal}`,
+        `/communication?term=${data.term}&initialDate=${data.initialDate}&finalDate=${data.finalDate}&minValue=${data.caseValueMin}&maxValue=${data.caseValueMax}&court=${data.court}&itemsPerPage=50&currentPage=1&journal=${data.journal}`,
       )
     },
   })
@@ -35,8 +36,6 @@ export default function Home() {
       return api.get('court')
     },
   })
-
-  console.log(query.data?.data)
 
   const onSubmit: SubmitHandler<Inputs> = (data) => mutate(data)
 
@@ -49,15 +48,15 @@ export default function Home() {
         >
           <div>
             <div className="mb-2 block">
-              Palavra-chave:
-              <label htmlFor="keyword" />
+              Termo de pesquisa:
+              <label htmlFor="term" />
             </div>
             <div className="relative max-w-sm">
               <input
-                id="keyword"
+                id="term"
                 type="text"
                 placeholder="Ex.: Precatório"
-                {...register('keyword', { required: true })}
+                {...register('term', { required: true })}
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               />
             </div>
@@ -133,32 +132,31 @@ export default function Home() {
               <option hidden value="Tribunal">
                 Tribunal
               </option>
-              {query.data?.data.map((court: any) => {
-                return (
-                  <option key={court.id} value={court.acronym}>
-                    {court.acronym}
-                  </option>
-                )
-              })}
+              <option value="TJSP">
+                TJSP - Tribunal de Justiça de São Paulo
+              </option>
+              <option value="TJSP-pre">Lista de Precatórios - TJSP</option>
             </select>
           </div>
-          <div className="text-center max-w-[300px]">
+          <div className="text-center w-[300px]">
             <div>
               Valor da causa:
               <label htmlFor="caseValue" />
             </div>
-            <div className="flex justify-between p-3">
+            <div className="flex justify-around items-center">
+              Min:
               <input
                 type="number"
                 id="caseValueMin"
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-1/2 p-2.5"
-                placeholder="R$ 100,00"
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-1/3 p-2.5"
+                placeholder="R$ 10,00"
                 {...register('caseValueMin')}
               />
+              Max:
               <input
                 type="number"
                 id="caseValueMax"
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-1/2 p-2.5"
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-1/3 p-2.5"
                 placeholder="R$ 5000,00"
                 {...register('caseValueMax')}
               />
@@ -171,73 +169,51 @@ export default function Home() {
       </header>
       <section className="pt-5 text-center">
         <table className="w-4/5 mx-auto bg-white">
-          <thead className="bg-gray-300 rounded-t-md rounded">
-            <tr>
-              <th className="border">Nº Processo</th>
-              <th className="border">Vara</th>
-              <th className="border">Comarca</th>
-              <th className="border max-w-10">Tribunal</th>
-              <th className="border">Link de acesso</th>
-              <th className="border">Conteúdo</th>
-              <th className="border">Tipo do documento</th>
-              <th className="border">Nome da classe</th>
-              <th className="border">Palavra-chave</th>
-              <th className="border">Data de inclusão</th>
-              <th className="border">Valor da causa</th>
-            </tr>
-          </thead>
-          <tbody className="w-4/5 mx-auto overflow-y-auto">
-            {isPending && <LoadingSpinner />}
-            {data?.data.items.map((communication) => {
-              return (
-                <tr key={communication.id}>
-                  <td className="border h-20">
-                    <button
-                      onClick={() =>
-                        push(`/lawsuit/${communication.lawsuitNumber}`)
-                      }
-                    >
-                      {communication.formatedLawsuitNumber}
-                    </button>
-                  </td>
-                  <td className="border max-h-20 overflow-y-auto">
-                    {communication.organName}
-                  </td>
-                  <td className="border max-h-20 overflow-y-auto">
-                    {communication.className}
-                  </td>
-                  <td className="border max-h-20 overflow-y-auto">
-                    {communication.court.acronym}
-                  </td>
-                  <td className="border max-h-20 max-w-10 overflow-y-auto">
-                    <a href={communication.link} target="_blank">
-                      link
-                    </a>
-                  </td>
-                  <td className="border max-h-20 overflow-x-auto">
-                    {communication.resume}
-                  </td>
-                  <td className="border max-h-20 overflow-y-auto">
-                    {communication.documentType}
-                  </td>
-                  <td className="border max-h-20 overflow-y-auto">
-                    {communication.className}
-                  </td>
-                  <td className="border max-h-20 overflow-y-auto">
-                    {communication.keyword}
-                  </td>
-                  <td className="border max-h-20 overflow-y-auto">
-                    {communication.divulgationDate}
-                  </td>
-                  <td className="border max-h-20 overflow-y-auto">
-                    {communication.lawsuit.lawsuitValue
-                      ? `R$ ${communication.lawsuit.lawsuitValue}`
-                      : '-'}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
+          {isPending && <LoadingSpinner />}
+          {query.data?.data ? (
+            <>
+              <TableHeadComm />
+              <tbody className="w-4/5 mx-auto overflow-y-auto">
+                {data?.data.items.map((communication) => {
+                  return (
+                    <tr key={communication.id}>
+                      <td className="border h-20">
+                        <button
+                          onClick={() =>
+                            push(`/lawsuit/${communication.lawsuitNumber}`)
+                          }
+                        >
+                          {communication.formatedLawsuitNumber}
+                        </button>
+                      </td>
+                      <td className="border max-h-20 overflow-y-auto">
+                        {communication.court.acronym}
+                      </td>
+                      <td className="border max-h-20 max-w-10 overflow-y-auto">
+                        <a href={communication.link} target="_blank">
+                          link
+                        </a>
+                      </td>
+                      <td className="border max-h-20 overflow-x-auto">
+                        {communication.resume}
+                      </td>
+                      <td className="border max-h-20 overflow-y-auto">
+                        {communication.documentType}
+                      </td>
+                      <td className="border max-h-20 overflow-y-auto">
+                        {communication.divulgationDate}
+                      </td>
+                      <td className="border max-h-20 overflow-y-auto">
+                        {communication.lawsuit.lawsuitValue
+                          ? `R$ ${communication.lawsuit.lawsuitValue}`
+                          : '-'}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </>
+          ) : null}
         </table>
       </section>
     </main>
