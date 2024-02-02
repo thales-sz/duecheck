@@ -16,7 +16,6 @@ function LawsuitDetails({ params }: { params: { id: string } }) {
     refetchOnWindowFocus: false,
   })
 
-  console.log(data)
   return (
     <div className="grid h-screen w-full lg:grid-cols-[300px_1fr] text-gray-900 lg:bg-gray-400">
       <nav className="hidden lg:flex lg:flex-col lg:justify-between lg:items-stretch lg:gap-4 lg:bg-gray-400 lg:px-4 lg:py-6 border-r-2 border-black">

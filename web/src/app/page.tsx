@@ -282,20 +282,20 @@ export default function Home() {
                     if (!variables) {
                       return
                     }
-                    setPage(page - 1)
+                    setPageTJSP(page - 1)
                     mutate(variables)
                   }}
                 >
                   Página Anterior
                 </button>
-                <h2>{page}</h2>
+                <h2>{watch('court') === 'TJSP-pre' ? page : pageTJSP}</h2>
                 <button
                   className="bg-white p-2 rounded-lg border"
                   onClick={() => {
                     if (!variables) {
                       return
                     }
-                    setPage(page + 1)
+                    setPageTJSP(page + 1)
                     mutate(variables)
                   }}
                 >
@@ -321,9 +321,7 @@ export default function Home() {
                         <Table.Content>
                           <button
                             className="underline text-blue-600 hover:text-blue-400"
-                            onClick={() =>
-                              push(`/lawsuit/${communication.lawsuitNumber}`)
-                            }
+                            onClick={() => push(`/lawsuit/${communication.id}`)}
                           >
                             {communication.formatedLawsuitNumber}
                           </button>
