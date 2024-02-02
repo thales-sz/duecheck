@@ -2,7 +2,7 @@
 
 import { api } from '@/api/api'
 import { Communication } from '../types/comunication.type'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { SubmitHandler, useForm } from 'react-hook-form'
 import { Table } from '@/components/Table'
