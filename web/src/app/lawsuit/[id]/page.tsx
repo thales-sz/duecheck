@@ -5,12 +5,13 @@ import { useQuery } from '@tanstack/react-query'
 import React from 'react'
 import Link from 'next/link'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import { Communication } from '@/types/comunication.type'
 
 function LawsuitDetails({ params }: { params: { id: string } }) {
   const { data, isPending } = useQuery({
     queryKey: ['lawsuit'],
     queryFn: async () => {
-      return api.get(`/lawsuit/${params.id}`)
+      return api.get<Communication>(`/communication/${params.id}`)
     },
     refetchOnWindowFocus: false,
   })
@@ -59,7 +60,8 @@ function LawsuitDetails({ params }: { params: { id: string } }) {
           ) : (
             <section className="flex flex-col w-3/4 items-center self-center space-x-5">
               <p>
-                Valor da causa: <span>R$ {data?.data?.lawsuitValue}</span>
+                Valor da causa:{' '}
+                <span>R$ {data?.data?.lawsuit.lawsuitValue}</span>
               </p>
               <p>
                 Número do processo:{' '}
@@ -69,7 +71,7 @@ function LawsuitDetails({ params }: { params: { id: string } }) {
                 Tribunal: <span>{data?.data?.court.description}</span>
               </p>
               <p>
-                Conteúdo: <span>{data?.data?.communication[0].content}</span>
+                Conteúdo: <span>{data?.data?.content}</span>
               </p>
             </section>
           )}
