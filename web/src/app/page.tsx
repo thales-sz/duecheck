@@ -1,14 +1,12 @@
 'use client'
 
 import { api } from '@/api/api'
-import LoadingSpinner from '@/components/LoadingSpinner'
 import { Communication } from '../types/comunication.type'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { SubmitHandler, useForm } from 'react-hook-form'
-import TableHeadComm from '@/components/TableHeadComm'
+import { log } from 'console'
 import { Table } from '@/components/Table'
-import { useState } from 'react'
 import { Precatory } from '@/types/precatory.type'
 
 type Inputs = {
@@ -36,18 +34,19 @@ export default function Home() {
 
   const precatoryReq = useMutation({
     mutationFn: async (data: Inputs) => {
+      log(data)
       return api.get<{ currentPage: number; items: Precatory[] }>(
         '/precatory?itemsPerPage=300&currentPage=1',
       )
     },
   })
 
-  const query = useQuery({
-    queryKey: ['court'],
-    queryFn: async () => {
-      return api.get('court')
-    },
-  })
+  // const query = useQuery({
+  //   queryKey: ['court'],
+  //   queryFn: async () => {
+  //     return api.get('court')
+  //   },
+  // })
 
   const onSubmit: SubmitHandler<Inputs> = (data) => {
     if (data.court === 'TJSP') {
