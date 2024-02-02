@@ -5,7 +5,6 @@ import { Communication } from '../types/comunication.type'
 import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { SubmitHandler, useForm } from 'react-hook-form'
-import { log } from 'console'
 import { Table } from '@/components/Table'
 import { Precatory } from '@/types/precatory.type'
 
@@ -34,7 +33,7 @@ export default function Home() {
 
   const precatoryReq = useMutation({
     mutationFn: async (data: Inputs) => {
-      log(data)
+      console.log(data)
       return api.get<{ currentPage: number; items: Precatory[] }>(
         '/precatory?itemsPerPage=300&currentPage=1',
       )
