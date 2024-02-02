@@ -3,6 +3,7 @@ import { twMerge } from 'tailwind-merge'
 
 export type InputProps = InputHTMLAttributes<HTMLInputElement>
 
+// eslint-disable-next-line react/display-name
 export const InputContent = forwardRef<HTMLInputElement, InputProps>(
   ({ id, type, className, placeholder, value, ...props }, ref) => {
     return (

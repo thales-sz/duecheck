@@ -1,15 +1,13 @@
 'use client'
 
 import { api } from '@/api/api'
-import LoadingSpinner from '@/components/LoadingSpinner'
 import { Communication } from '../types/comunication.type'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { SubmitHandler, useForm } from 'react-hook-form'
-import TableHeadComm from '@/components/TableHeadComm'
 import { Table } from '@/components/Table'
-import { useState } from 'react'
 import { Precatory } from '@/types/precatory.type'
+import { useState } from 'react'
 
 type Inputs = {
   term: string
@@ -25,27 +23,22 @@ type Inputs = {
 export default function Home() {
   const { register, handleSubmit, watch } = useForm<Inputs>()
   const { push } = useRouter()
+  const [page, setPage] = useState<number>(1)
+  const [pageTJSP, setPageTJSP] = useState<number>(1)
 
-  const { mutate, data, isPending } = useMutation({
+  const { mutate, data, isPending, variables } = useMutation({
     mutationFn: async (data: Inputs) => {
       return api.get<{ currentPage: number; items: Communication[] }>(
-        `/communication?term=${data.term}&initialDate=${data.initialDate}&finalDate=${data.finalDate}&minValue=${data.caseValueMin}&maxValue=${data.caseValueMax}&court=${data.court}&itemsPerPage=300&currentPage=1&journal=${data.journal}`,
+        `/communication?term=${data.term}&initialDate=${data.initialDate}&finalDate=${data.finalDate}&minValue=${data.caseValueMin}&maxValue=${data.caseValueMax}&court=${data.court}&itemsPerPage=30&currentPage=${pageTJSP}&journal=${data.journal}`,
       )
     },
   })
 
   const precatoryReq = useMutation({
-    mutationFn: async (data: Inputs) => {
+    mutationFn: async () => {
       return api.get<{ currentPage: number; items: Precatory[] }>(
-        '/precatory?itemsPerPage=300&currentPage=1',
+        `/precatory?itemsPerPage=30&currentPage=${page}`,
       )
-    },
-  })
-
-  const query = useQuery({
-    queryKey: ['court'],
-    queryFn: async () => {
-      return api.get('court')
     },
   })
 
@@ -53,7 +46,7 @@ export default function Home() {
     if (data.court === 'TJSP') {
       return mutate(data)
     } else {
-      return precatoryReq.mutate(data)
+      return precatoryReq.mutate()
     }
   }
 
@@ -64,7 +57,7 @@ export default function Home() {
           className="flex gap-4 items-center justify-evenly w-full"
           onSubmit={handleSubmit(onSubmit)}
         >
-          <div>
+          <div className={`${watch('court') === 'TJSP-pre' ? 'hidden' : ''}`}>
             <div className="mb-2 block">
               Termo de pesquisa:
               <label htmlFor="term" />
@@ -74,12 +67,13 @@ export default function Home() {
                 id="term"
                 type="text"
                 placeholder="Ex.: Precatório"
-                {...register('term', { required: true })}
+                required={watch('court') === 'TJSP'}
+                {...register('term')}
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               />
             </div>
           </div>
-          <div>
+          <div className={`${watch('court') === 'TJSP-pre' ? 'hidden' : ''}`}>
             <div className="mb-2 block">
               Data inicial:
               <label htmlFor="initialDate" />
@@ -101,11 +95,12 @@ export default function Home() {
                 id="initialDate"
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 w-full pl-10 p-2.5"
                 placeholder="Select date"
-                {...register('initialDate', { required: true })}
+                required={watch('court') === 'TJSP'}
+                {...register('initialDate')}
               />
             </div>
           </div>
-          <div>
+          <div className={`${watch('court') === 'TJSP-pre' ? 'hidden' : ''}`}>
             <div className="mb-2 block">
               Data final:
               <label htmlFor="finalDate" />
@@ -127,8 +122,8 @@ export default function Home() {
                 id="finalDate"
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
                 placeholder="Select date"
-                required
-                {...register('finalDate', { required: true })}
+                required={watch('court') === 'TJSP'}
+                {...register('finalDate')}
               />
             </div>
           </div>
@@ -158,7 +153,11 @@ export default function Home() {
               <option value="TJSP-pre">Lista de Precatórios - TJSP</option>
             </select>
           </div>
-          <div className="text-center w-[300px]">
+          <div
+            className={`text-center w-[300px] ${
+              watch('court') === 'TJSP-pre' ? 'hidden' : ''
+            }`}
+          >
             <div>
               Valor da causa:
               <label htmlFor="caseValue" />
@@ -193,143 +192,195 @@ export default function Home() {
       <section className="p-4">
         <div className="relative overflow-x-hidden rounded-lg shadow-lg">
           {watch('court') === 'TJSP-pre' ? (
-            <Table.Root>
-              <Table.Head>
-                <Table.HeadRow>
-                  <Table.ContentHead>Nº DEPRE</Table.ContentHead>
-                  <Table.ContentHead>Natureza</Table.ContentHead>
-                  <Table.ContentHead>Advogado</Table.ContentHead>
-                  <Table.ContentHead>Nº. Auto</Table.ContentHead>
-                  <Table.ContentHead>Ordem de orçamento</Table.ContentHead>
-                  <Table.ContentHead>Ordem de pagamento</Table.ContentHead>
-                  <Table.ContentHead>Data do protocolo</Table.ContentHead>
-                </Table.HeadRow>
-              </Table.Head>
-              <Table.Body>
-                {precatoryReq.data?.data.items.map((precatory) => {
-                  return (
-                    <Table.Row key={precatory.id}>
-                      <Table.Content>{precatory.DEPRE}</Table.Content>
-                      <Table.Content>{precatory.nature}</Table.Content>
-                      <Table.Content>{precatory.lawyer}</Table.Content>
-                      <Table.Content>{precatory.autoNumber}</Table.Content>
-                      <Table.Content>{precatory.budgetOrder}</Table.Content>
-                      <Table.Content>{precatory.paymentOrder}</Table.Content>
+            <>
+              <div className="flex flex-row justify-between mb-2">
+                <button
+                  className="bg-white p-2 rounded-lg border"
+                  onClick={() => {
+                    setPage(page - 1)
+                    precatoryReq.mutate()
+                  }}
+                >
+                  Página Anterior
+                </button>
+                <h2>{page}</h2>
+                <button
+                  className="bg-white p-2 rounded-lg border"
+                  onClick={() => {
+                    setPage(page + 1)
+                    precatoryReq.mutate()
+                  }}
+                >
+                  Proxima Página
+                </button>
+              </div>
+              <Table.Root>
+                <Table.Head>
+                  <Table.HeadRow>
+                    <Table.ContentHead>Nº DEPRE</Table.ContentHead>
+                    <Table.ContentHead>Natureza</Table.ContentHead>
+                    <Table.ContentHead>Advogado</Table.ContentHead>
+                    <Table.ContentHead>Nº. Auto</Table.ContentHead>
+                    <Table.ContentHead>Ordem de orçamento</Table.ContentHead>
+                    <Table.ContentHead>Ordem de pagamento</Table.ContentHead>
+                    <Table.ContentHead>Data do protocolo</Table.ContentHead>
+                  </Table.HeadRow>
+                </Table.Head>
+                <Table.Body>
+                  {precatoryReq.data?.data.items.map((precatory) => {
+                    return (
+                      <Table.Row key={precatory.id}>
+                        <Table.Content>{precatory.DEPRE}</Table.Content>
+                        <Table.Content>{precatory.nature}</Table.Content>
+                        <Table.Content>{precatory.lawyer}</Table.Content>
+                        <Table.Content>{precatory.autoNumber}</Table.Content>
+                        <Table.Content>{precatory.budgetOrder}</Table.Content>
+                        <Table.Content>{precatory.paymentOrder}</Table.Content>
+                        <Table.Content>
+                          {new Date(precatory.protocolDate).toLocaleString(
+                            'pt-BR',
+                            {
+                              timeZone: 'America/Sao_Paulo',
+                            },
+                          )}
+                        </Table.Content>
+                      </Table.Row>
+                    )
+                  })}
+                  {precatoryReq.isPending && (
+                    <Table.Row className="p-2">
+                      <Table.Content></Table.Content>
                       <Table.Content>
-                        {new Date(precatory.protocolDate).toLocaleString(
-                          'pt-BR',
-                          {
-                            timeZone: 'America/Sao_Paulo',
-                          },
-                        )}
+                        <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
+                      </Table.Content>
+                      <Table.Content>
+                        <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
+                      </Table.Content>
+                      <Table.Content>
+                        <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
+                      </Table.Content>
+                      <Table.Content>
+                        <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
+                      </Table.Content>
+                      <Table.Content>
+                        <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
+                      </Table.Content>
+                      <Table.Content>
+                        <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
                       </Table.Content>
                     </Table.Row>
-                  )
-                })}
-                {precatoryReq.isPending && (
-                  <Table.Row className="p-2">
-                    <Table.Content></Table.Content>
-                    <Table.Content>
-                      <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
-                    </Table.Content>
-                    <Table.Content>
-                      <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
-                    </Table.Content>
-                    <Table.Content>
-                      <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
-                    </Table.Content>
-                    <Table.Content>
-                      <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
-                    </Table.Content>
-                    <Table.Content>
-                      <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
-                    </Table.Content>
-                    <Table.Content>
-                      <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
-                    </Table.Content>
-                  </Table.Row>
-                )}
-              </Table.Body>
-            </Table.Root>
+                  )}
+                </Table.Body>
+              </Table.Root>
+            </>
           ) : (
-            <Table.Root>
-              <Table.Head className="bg-white">
-                <Table.HeadRow>
-                  <Table.ContentHead>Nº Processo</Table.ContentHead>
-                  <Table.ContentHead>Tribunal</Table.ContentHead>
-                  <Table.ContentHead>Link de acesso</Table.ContentHead>
-                  <Table.ContentHead>Conteúdo</Table.ContentHead>
-                  <Table.ContentHead>Tipo do documento</Table.ContentHead>
-                  <Table.ContentHead>Data de inclusão</Table.ContentHead>
-                  <Table.ContentHead>Valor da causa</Table.ContentHead>
-                </Table.HeadRow>
-              </Table.Head>
-              <Table.Body>
-                {data?.data.items.map((communication) => {
-                  return (
-                    <Table.Row key={communication.id}>
+            <>
+              <div className="flex flex-row justify-between mb-2">
+                <button
+                  className="bg-white p-2 rounded-lg border"
+                  onClick={() => {
+                    if (!variables) {
+                      return
+                    }
+                    setPage(page - 1)
+                    mutate(variables)
+                  }}
+                >
+                  Página Anterior
+                </button>
+                <h2>{page}</h2>
+                <button
+                  className="bg-white p-2 rounded-lg border"
+                  onClick={() => {
+                    if (!variables) {
+                      return
+                    }
+                    setPage(page + 1)
+                    mutate(variables)
+                  }}
+                >
+                  Proxima Página
+                </button>
+              </div>
+              <Table.Root>
+                <Table.Head className="bg-white">
+                  <Table.HeadRow>
+                    <Table.ContentHead>Nº Processo</Table.ContentHead>
+                    <Table.ContentHead>Tribunal</Table.ContentHead>
+                    <Table.ContentHead>Link de acesso</Table.ContentHead>
+                    <Table.ContentHead>Conteúdo</Table.ContentHead>
+                    <Table.ContentHead>Tipo do documento</Table.ContentHead>
+                    <Table.ContentHead>Data de inclusão</Table.ContentHead>
+                    <Table.ContentHead>Valor da causa</Table.ContentHead>
+                  </Table.HeadRow>
+                </Table.Head>
+                <Table.Body>
+                  {data?.data.items.map((communication) => {
+                    return (
+                      <Table.Row key={communication.id}>
+                        <Table.Content>
+                          <button
+                            className="underline text-blue-600 hover:text-blue-400"
+                            onClick={() =>
+                              push(`/lawsuit/${communication.lawsuitNumber}`)
+                            }
+                          >
+                            {communication.formatedLawsuitNumber}
+                          </button>
+                        </Table.Content>
+                        <Table.Content>
+                          {communication.court.acronym}
+                        </Table.Content>
+                        <Table.Content>
+                          <a
+                            href={communication.link}
+                            target="_blank"
+                            className="text-blue-700 underline hover:text-blue-400"
+                          >
+                            link
+                          </a>
+                        </Table.Content>
+                        <Table.Content>{communication.resume}</Table.Content>
+                        <Table.Content>
+                          {communication.documentType}
+                        </Table.Content>
+                        <Table.Content>
+                          {communication.divulgationDate}
+                        </Table.Content>
+                        <Table.Content>
+                          {communication.lawsuit.lawsuitValue
+                            ? `R$ ${communication.lawsuit.lawsuitValue}`
+                            : '-'}
+                        </Table.Content>
+                      </Table.Row>
+                    )
+                  })}
+                  {isPending && (
+                    <Table.Row className="p-2">
+                      <Table.Content></Table.Content>
                       <Table.Content>
-                        <button
-                          className="underline text-blue-600 hover:text-blue-400"
-                          onClick={() =>
-                            push(`/lawsuit/${communication.lawsuitNumber}`)
-                          }
-                        >
-                          {communication.formatedLawsuitNumber}
-                        </button>
+                        <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
                       </Table.Content>
                       <Table.Content>
-                        {communication.court.acronym}
+                        <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
                       </Table.Content>
                       <Table.Content>
-                        <a
-                          href={communication.link}
-                          target="_blank"
-                          className="text-blue-700 underline hover:text-blue-400"
-                        >
-                          link
-                        </a>
-                      </Table.Content>
-                      <Table.Content>{communication.resume}</Table.Content>
-                      <Table.Content>
-                        {communication.documentType}
+                        <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
                       </Table.Content>
                       <Table.Content>
-                        {communication.divulgationDate}
+                        <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
                       </Table.Content>
                       <Table.Content>
-                        {communication.lawsuit.lawsuitValue
-                          ? `R$ ${communication.lawsuit.lawsuitValue}`
-                          : '-'}
+                        <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
+                      </Table.Content>
+                      <Table.Content>
+                        <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
                       </Table.Content>
                     </Table.Row>
-                  )
-                })}
-                {isPending && (
-                  <Table.Row className="p-2">
-                    <Table.Content></Table.Content>
-                    <Table.Content>
-                      <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
-                    </Table.Content>
-                    <Table.Content>
-                      <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
-                    </Table.Content>
-                    <Table.Content>
-                      <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
-                    </Table.Content>
-                    <Table.Content>
-                      <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
-                    </Table.Content>
-                    <Table.Content>
-                      <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
-                    </Table.Content>
-                    <Table.Content>
-                      <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
-                    </Table.Content>
-                  </Table.Row>
-                )}
-              </Table.Body>
-            </Table.Root>
+                  )}
+                </Table.Body>
+              </Table.Root>
+            </>
           )}
         </div>
       </section>

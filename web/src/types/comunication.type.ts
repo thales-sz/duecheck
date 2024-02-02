@@ -2,6 +2,7 @@ export type Communication = {
   id: number
   communicationDate: Date
   divulgationDate: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   court: any
   communicationType: string
   keyword: string
@@ -14,8 +15,11 @@ export type Communication = {
   className: string // nome classe
   source: string // meio completo
   formatedLawsuitNumber: string // numero processo com mascara
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   receiver: any // destinatarios
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   lawyer: any // advogados
   read: boolean
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   lawsuit: any
 }
