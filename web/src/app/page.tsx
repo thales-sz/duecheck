@@ -7,6 +7,9 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { SubmitHandler, useForm } from 'react-hook-form'
 import TableHeadComm from '@/components/TableHeadComm'
+import { Table } from '@/components/Table'
+import { useState } from 'react'
+import { Precatory } from '@/types/precatory.type'
 
 type Inputs = {
   term: string
@@ -20,12 +23,21 @@ type Inputs = {
 }
 
 export default function Home() {
-  const { register, handleSubmit } = useForm<Inputs>()
+  const { register, handleSubmit, watch } = useForm<Inputs>()
   const { push } = useRouter()
+
   const { mutate, data, isPending } = useMutation({
     mutationFn: async (data: Inputs) => {
       return api.get<{ currentPage: number; items: Communication[] }>(
         `/communication?term=${data.term}&initialDate=${data.initialDate}&finalDate=${data.finalDate}&minValue=${data.caseValueMin}&maxValue=${data.caseValueMax}&court=${data.court}&itemsPerPage=300&currentPage=1&journal=${data.journal}`,
+      )
+    },
+  })
+
+  const precatoryReq = useMutation({
+    mutationFn: async (data: Inputs) => {
+      return api.get<{ currentPage: number; items: Precatory[] }>(
+        '/precatory?itemsPerPage=300&currentPage=1',
       )
     },
   })
@@ -37,11 +49,17 @@ export default function Home() {
     },
   })
 
-  const onSubmit: SubmitHandler<Inputs> = (data) => mutate(data)
+  const onSubmit: SubmitHandler<Inputs> = (data) => {
+    if (data.court === 'TJSP') {
+      return mutate(data)
+    } else {
+      return precatoryReq.mutate(data)
+    }
+  }
 
   return (
     <main className="flex-col min-h-screen w-full items-center bg-white text-black">
-      <header className="w-full top bg-gray-400 p-4 rounded-b-lg shadow-xl">
+      <header className="w-full top bg-blue-300 p-4 rounded-b-lg shadow-xl">
         <form
           className="flex gap-4 items-center justify-evenly w-full"
           onSubmit={handleSubmit(onSubmit)}
@@ -125,7 +143,9 @@ export default function Home() {
             </div>
             <select
               id="court"
-              {...register('court', { required: true })}
+              {...register('court', {
+                required: true,
+              })}
               defaultValue="Tribunal"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
             >
@@ -162,55 +182,156 @@ export default function Home() {
               />
             </div>
           </div>
-          <button type="submit" className="bg-blue-300 p-2.5 rounded-md">
+          <button
+            type="submit"
+            className="bg-white p-2.5 rounded-md hover:scale-105"
+          >
             Pesquisar
           </button>
         </form>
       </header>
-      <section className="pt-5 text-center">
-        <table className="w-4/5 mx-auto bg-white">
-          <TableHeadComm />
-          {isPending && <LoadingSpinner />}
-          <tbody className="w-4/5 mx-auto overflow-y-auto">
-            {data?.data.items.map((communication) => {
-              return (
-                <tr key={communication.id}>
-                  <td className="border h-20">
-                    <button
-                      onClick={() =>
-                        push(`/lawsuit/${communication.lawsuitNumber}`)
-                      }
-                    >
-                      {communication.formatedLawsuitNumber}
-                    </button>
-                  </td>
-                  <td className="border max-h-20 overflow-y-auto">
-                    {communication.court.acronym}
-                  </td>
-                  <td className="border max-h-20 max-w-10 overflow-y-auto">
-                    <a href={communication.link} target="_blank">
-                      link
-                    </a>
-                  </td>
-                  <td className="border max-h-20 overflow-x-auto">
-                    {communication.resume}
-                  </td>
-                  <td className="border max-h-20 overflow-y-auto">
-                    {communication.documentType}
-                  </td>
-                  <td className="border max-h-20 overflow-y-auto">
-                    {communication.divulgationDate}
-                  </td>
-                  <td className="border max-h-20 overflow-y-auto">
-                    {communication.lawsuit.lawsuitValue
-                      ? `R$ ${communication.lawsuit.lawsuitValue}`
-                      : '-'}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+      <section className="p-4">
+        <div className="relative overflow-x-hidden rounded-lg shadow-lg">
+          {watch('court') === 'TJSP-pre' ? (
+            <Table.Root>
+              <Table.Head>
+                <Table.HeadRow>
+                  <Table.ContentHead>Nº DEPRE</Table.ContentHead>
+                  <Table.ContentHead>Natureza</Table.ContentHead>
+                  <Table.ContentHead>Advogado</Table.ContentHead>
+                  <Table.ContentHead>Nº. Auto</Table.ContentHead>
+                  <Table.ContentHead>Ordem de orçamento</Table.ContentHead>
+                  <Table.ContentHead>Ordem de pagamento</Table.ContentHead>
+                  <Table.ContentHead>Data do protocolo</Table.ContentHead>
+                </Table.HeadRow>
+              </Table.Head>
+              <Table.Body>
+                {precatoryReq.data?.data.items.map((precatory) => {
+                  return (
+                    <Table.Row key={precatory.id}>
+                      <Table.Content>{precatory.DEPRE}</Table.Content>
+                      <Table.Content>{precatory.nature}</Table.Content>
+                      <Table.Content>{precatory.lawyer}</Table.Content>
+                      <Table.Content>{precatory.autoNumber}</Table.Content>
+                      <Table.Content>{precatory.budgetOrder}</Table.Content>
+                      <Table.Content>{precatory.paymentOrder}</Table.Content>
+                      <Table.Content>
+                        {new Date(precatory.protocolDate).toLocaleString(
+                          'pt-BR',
+                          {
+                            timeZone: 'America/Sao_Paulo',
+                          },
+                        )}
+                      </Table.Content>
+                    </Table.Row>
+                  )
+                })}
+                {precatoryReq.isPending && (
+                  <Table.Row className="p-2">
+                    <Table.Content></Table.Content>
+                    <Table.Content>
+                      <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
+                    </Table.Content>
+                    <Table.Content>
+                      <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
+                    </Table.Content>
+                    <Table.Content>
+                      <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
+                    </Table.Content>
+                    <Table.Content>
+                      <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
+                    </Table.Content>
+                    <Table.Content>
+                      <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
+                    </Table.Content>
+                    <Table.Content>
+                      <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
+                    </Table.Content>
+                  </Table.Row>
+                )}
+              </Table.Body>
+            </Table.Root>
+          ) : (
+            <Table.Root>
+              <Table.Head className="bg-white">
+                <Table.HeadRow>
+                  <Table.ContentHead>Nº Processo</Table.ContentHead>
+                  <Table.ContentHead>Tribunal</Table.ContentHead>
+                  <Table.ContentHead>Link de acesso</Table.ContentHead>
+                  <Table.ContentHead>Conteúdo</Table.ContentHead>
+                  <Table.ContentHead>Tipo do documento</Table.ContentHead>
+                  <Table.ContentHead>Data de inclusão</Table.ContentHead>
+                  <Table.ContentHead>Valor da causa</Table.ContentHead>
+                </Table.HeadRow>
+              </Table.Head>
+              <Table.Body>
+                {data?.data.items.map((communication) => {
+                  return (
+                    <Table.Row key={communication.id}>
+                      <Table.Content>
+                        <button
+                          className="underline text-blue-600 hover:text-blue-400"
+                          onClick={() =>
+                            push(`/lawsuit/${communication.lawsuitNumber}`)
+                          }
+                        >
+                          {communication.formatedLawsuitNumber}
+                        </button>
+                      </Table.Content>
+                      <Table.Content>
+                        {communication.court.acronym}
+                      </Table.Content>
+                      <Table.Content>
+                        <a
+                          href={communication.link}
+                          target="_blank"
+                          className="text-blue-700 underline hover:text-blue-400"
+                        >
+                          link
+                        </a>
+                      </Table.Content>
+                      <Table.Content>{communication.resume}</Table.Content>
+                      <Table.Content>
+                        {communication.documentType}
+                      </Table.Content>
+                      <Table.Content>
+                        {communication.divulgationDate}
+                      </Table.Content>
+                      <Table.Content>
+                        {communication.lawsuit.lawsuitValue
+                          ? `R$ ${communication.lawsuit.lawsuitValue}`
+                          : '-'}
+                      </Table.Content>
+                    </Table.Row>
+                  )
+                })}
+                {isPending && (
+                  <Table.Row className="p-2">
+                    <Table.Content></Table.Content>
+                    <Table.Content>
+                      <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
+                    </Table.Content>
+                    <Table.Content>
+                      <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
+                    </Table.Content>
+                    <Table.Content>
+                      <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
+                    </Table.Content>
+                    <Table.Content>
+                      <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
+                    </Table.Content>
+                    <Table.Content>
+                      <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
+                    </Table.Content>
+                    <Table.Content>
+                      <div className=" bg-slate-400 animate-pulse rounded-lg w-1/2 h-3"></div>
+                    </Table.Content>
+                  </Table.Row>
+                )}
+              </Table.Body>
+            </Table.Root>
+          )}
+        </div>
       </section>
     </main>
   )

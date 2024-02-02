@@ -7,10 +7,7 @@ export default function LoginLayout({
 }) {
   return (
     <>
-      <main className="flex h-screen items-center justify-center bg-white p-8 md:p-20 lg:justify-between">
-        <div className=" hidden flex-col gap-6 lg:flex">
-          <Title>Bem vindo de volta!</Title>
-        </div>
+      <main className="flex h-screen items-center justify-center bg-gradient-to-r from-cyan-200 to-blue-500 p-8 md:p-20">
         {children}
       </main>
     </>
